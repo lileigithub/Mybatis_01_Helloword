@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lilei.dao.EmployeeResultMapMapper">
+
+	<!-- 自定义结果集映射规则 -->
+	 <!-- <resultMap type="com.lilei.bean.Employee" id="myMap1">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+	 	<result column="did" property="dept.id"/>
+	 	<result column="dept_name" property="dept.deptName"/>
+	 </resultMap> -->
+	 <resultMap type="com.lilei.bean.Employee" id="myMap2">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+	 	<!-- 指定联合的javaBean
+	 	property 指定哪个属性是联合的对象
+	 	javaType 指定这个属性的类型
+	 	 -->
+		<association property="dept" javaType="com.lilei.bean.Department">
+			<id column="did" property="id"/>
+			<result column="dept_name" property="deptName"/>
+		</association>
+	 </resultMap>
+	 <select id="getEmpAndDepById" resultMap="myMap2">
+	 	select e.id id,e.last_name last_name,e.gender gender,e.d_id d_id,d.id did,d.dept_name dept_name
+ 		from tbl_employee e,tbl_dept d where e.d_id = d.id and e.id = #{id}
+	 </select>
+	 
+	 <!-- 分步查询
+	 	延迟加载(懒加载)
+	 	collection嵌套结果集的方式
+	  -->
+	  <!-- 分步查询 
+	  		1.先根据员工id查员工信息
+	  		2.根据d_id去部门查出部门信息
+	  		3.部门设置到员工中
+	  -->
+	  <resultMap type="com.lilei.bean.Employee" id="myMap3">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+		<association property="dept" select="com.lilei.dao.DepartmentMapper.getDeptById"
+		column="d_id">
+		</association>
+	 </resultMap>
+	 <select id="getEmpByIdStep" resultMap="myMap3">
+	 	select * from tbl_employee where id = #{id}
+	 </select>
+	 
+	 <resultMap type="com.lilei.bean.Department" id="myMap4">
+	 	<id column="did" property="id"/>
+	 	<result column="dept_name" property="deptName"/>
+		<collection property="emps" ofType="com.lilei.bean.Employee">
+			<id column="eid" property="id"/>
+	 		<result column="last_name" property="lastName"/>
+		</collection>
+	 </resultMap>
+	 <select id="getDeptAndEmpById" resultMap="myMap4">
+	 	select d.id did,d.dept_name,e.id eid,e.last_name from tbl_dept d left join tbl_employee e on d.id = e.d_id where d.id = #{id}
+	 </select>
+	  
+	  <resultMap type="com.lilei.bean.Department" id="myMap5">
+	  	<id column="id" property="id"/>
+	 	<result column="dept_name" property="deptName"/>
+	 	<collection property="emps" select="com.lilei.dao.EmployeeMapper.getEmpByDeptId"
+	 	column="id" fetchType="lazy"></collection>
+	 	<!-- column="{deptId=id}" 传入多个参数，用map-->
+	  </resultMap>
+	  <select id="getDeptAndEmpByIdStep" resultMap="myMap5">
+	  	select * from tbl_dept where id = #{id}
+	  </select>
+	  
+	  <!-- 鉴别器：根据某列的值改变封装行为 -->
+	  <resultMap type="com.lilei.bean.Employee" id="myMap6">
+	 	<id column="id" property="id"/>
+	 	<result column="last_name" property="lastName"/>
+	 	<result column="gender" property="gender"/>
+	 	<!-- javatype 列值对应的java类型 -->
+	 	<discriminator javaType="string" column="gender">
+	 		<case value="1" resultType="com.lilei.bean.Employee">
+	 			<association property="dept" select="com.lilei.dao.DepartmentMapper.getDeptById"
+				column="d_id">
+				</association>
+	 		</case>
+	 		<case value="2" resultType="com.lilei.bean.Employee">
+	 			<id column="id" property="id"/>
+	 			<result column="last_name" property="gender"/>
+			 	<result column="email" property="email"/>
+	 		</case>
+	 	</discriminator>
+	 </resultMap>
+	 <select id="getEmpByIddiscriminator" resultMap="myMap6">
+	 	select * from tbl_employee where id = #{id}
+	 </select>
+</mapper>

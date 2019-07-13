@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lilei.dao.EmployeeMapper">
+	<cache eviction="FIFO" flushInterval="60000" readOnly="false" size="1024"></cache>
+
+	<select id="getEmpById" resultType="emp" databaseId="mysql" useCache="true">
+		select * from tbl_employee where id = #{id}
+	</select>
+	
+	<!-- 可以用param1来传入参数 -->
+	<!-- <select id="getEmpByIdAndLastName" resultType="com.lilei.bean.Employee">
+		select * from tbl_employee where id = #{param1} and last_name = #{param2}
+	</select> -->
+	<!-- 也可以用@param() -->
+	<select id="getEmpByIdAndLastName" resultType="com.lilei.bean.Employee">
+		select * from ${tableName} where id = #{id} and last_name = #{lastName}
+	</select>
+	<!-- 多个参数，不是业务模型中的数据，不经常使用，也可以用Map-->
+	<!-- <select id="getEmpByMap" resultType="com.lilei.bean.Employee">
+		select * from tbl_employee where id = #{id} and last_name = #{lastName}
+	</select> -->
+	<!-- 多个参数，不是业务模型中的数据，经常使用，推荐编写一个TO(Transfer Object)数据传输对象 -->
+	
+	<!-- parameterType可以省略 -->
+	<!-- useGeneratedKeys="true" 使用自增主键，获取主键策略 
+	keyProperty 指定对应的主键属性-->
+	<insert id="addEmp" parameterType="com.lilei.bean.Employee"
+		useGeneratedKeys="true" keyProperty="id" flushCache="true">
+		insert into tbl_employee (last_name,email,gender) 
+		values(#{lastName},#{email},#{gender})
+	</insert>
+	
+	<!-- keyProperty查出主键值封装给javabean的哪个属性值 -->
+	<!-- order="BEFORE":当前sql在插入sql之前运行 -->
+	<insert id="addEmp" databaseId="oracle">
+		<selectKey keyProperty="id" order="BEFORE" resultType="Integer">
+		    <!-- 编写查询主键的sql语句 -->
+			select EMPLOYEE_SEQ.nextval from dual
+		</selectKey>
+		<!-- 插入的主键是从序列中拿到的 -->
+		insert into tbl_employee (last_name,email,gender) 
+		values(#{id},#{lastName},#{email,jdbcType=NULL},#{gender})<!-- mybatis默认对null的处理是JDBC的ORTHER类型，而Oracle用的是NULL类型 -->
+	</insert>
+	
+	<update id="updateEmp">
+		update tbl_employee 
+		set last_name = #{lastName},email = #{email},gender = #{gender}
+		where id = #{id}
+	</update>
+	
+	<delete id="deleteEmpById">
+		delete from tbl_employee where id = #{id}
+	</delete>
+	
+	<!-- #{}是预编译占位符 ${}是拼接
+	大多数情况下取参数用#{} 当原生sql不支持预编译占位符，
+	比如 2019_table 这种需要变换表名的，可以用${year}_table
+	或者 order by #{name} 会转成 order by 'mingzi',所以只能拼接
+	 -->
+	 
+	 <select id="getEmpListByNameLike" resultType="com.lilei.bean.Employee">
+	 	<bind name="_lastName" value="'%'+name+'%'"/>
+	 	select * from tbl_employee where last_name like #{_lastName}
+	 </select>
+	 
+	 <select id="getEmpByMap" resultType="com.lilei.bean.Employee">
+	 	select * from tbl_employee where id = #{id} and last_name = #{lastName}
+	 </select>
+	 
+	 <select id="getEmpByIdReturnMap" resultType="map">
+	 	select * from tbl_employee where id = #{id}
+	 </select>
+	 <select id="getEmpListByNameLikeReturnEmployeeMap" resultType="com.lilei.bean.Employee">
+	 	select * from tbl_employee where last_name like #{name}
+	 </select>
+	 
+	 <select id="getEmpByDeptId" resultType="com.lilei.bean.Employee">
+	 	select * from tbl_employee where d_id = #{deptId}
+	 </select>
+</mapper>

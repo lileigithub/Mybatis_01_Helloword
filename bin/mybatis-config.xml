@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+	<!-- 
+		1.mybatis可以引入外部properties文件内容
+		resource：引入类路径下的资源
+		url：引入网络路径或磁盘下的资源
+	 -->
+	<properties resource="dbconfig.properties"></properties>
+	<!-- 2.settings 包含很多重要的设置项 -->
+	<settings>
+		<setting name="mapUnderscoreToCamelCase" value="true"/>
+		<setting name="jdbcTypeForNull" value="NULL"/>
+		<setting name="lazyLoadingEnabled" value="true"/>
+		<setting name="aggressiveLazyLoading" value="false"/>
+		<setting name="cacheEnabled" value="true"/>
+	</settings>
+	<!-- 3.typeAliases:别名处理器，可以为我们的java类型起别名,别名不区分大小写 -->
+	<typeAliases>
+		<!-- typeAlias为某个java类起别名 -->
+		<!-- <typeAlias type="com.lilei.bean.Employee" alias="emp"/> -->
+		<!-- package 批量起别名 -->
+		<package name="com.lilei.bean"/>
+		<!-- 在批量起别名的情况下，可以用@Alias注解在类里为类型指定新的别名 -->
+	</typeAliases>
+	<environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC" />
+			<dataSource type="POOLED">
+				<property name="driver" value="${jdbc.driver}" />
+				<property name="url" value="${jdbc.url}" /><!-- 这里连接符&&要转义成&amp; -->
+				<property name="username" value="${jdbc.username}" />
+				<property name="password" value="${jdbc.password}" />
+			</dataSource>
+		</environment>
+	</environments>
+	<!-- 5.mybatis 对多数据厂商的支持 -->
+	<databaseIdProvider type="DB_VENDOR">
+	<!-- 为不同的数据库厂商起别名 -->
+		<property name="MySQL" value="mysql"/>
+		<property name="Oracle" value="oracle"/>
+		<property name="SQL Server" value="sqlserver"/>
+	</databaseIdProvider>
+	
+	<!-- 将sql映射注入到全局配置中 -->
+	<mappers>
+		<!-- 1.注册配置文件 -->
+		<!-- <mapper resource="EmployeeMapper.xml" /> -->
+		<!-- 2.注册接口  配置文件必须和接口同名并放在同一目录下
+			没有配置文件，sql语句用注解写在接口上 
+				推荐：重要的复杂的sql用配置，简单的用注解
+		-->
+		<!-- <mapper class="com.lilei.dao.EmployeeMapper"/> -->
+		<!-- 批量注册 -->
+		<package name="com.lilei.dao"/>
+	</mappers>
+</configuration>
